@@ -1,4 +1,4 @@
-import { ADD_TASK, MOVE_TASK, REMOVE_TASK } from "../actions/types";
+import { ADD_TASK, MOVE_TASK, REMOVE_TASK } from "../types";
 
 const initialState = {
   columns: [
@@ -21,12 +21,13 @@ const initialState = {
 };
 
 const tasksReducer = (state = initialState, action) => {
+  console.log(action);
   switch (action.type) {
     case ADD_TASK:
       return {
         ...state,
         columns: state.columns.map((column) => {
-          if (column.id === action.payload.columnId) {
+          if (column.id === action.payload.task.id) {
             return {
               ...column,
               tasks: [...column.tasks, action.payload.task],
@@ -43,9 +44,7 @@ const tasksReducer = (state = initialState, action) => {
       const destinationColumn = state.columns.find(
         (column) => column.id === destinationColumnId
       );
-      const filteredTasks = sourceColumn.tasks.filter(
-        (t) => t.id !== task.id
-      );
+      const filteredTasks = sourceColumn.tasks.filter((t) => t.id !== task.id);
       return {
         ...state,
         columns: state.columns.map((column) => {
@@ -66,7 +65,9 @@ const tasksReducer = (state = initialState, action) => {
       };
     case REMOVE_TASK:
       const { taskId, columnId } = action.payload;
-      const targetColumn = state.columns.find((column) => column.id === columnId);
+      const targetColumn = state.columns.find(
+        (column) => column.id === columnId
+      );
       const filteredTasksAfterRemoval = targetColumn.tasks.filter(
         (t) => t.id !== taskId
       );

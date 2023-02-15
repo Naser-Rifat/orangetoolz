@@ -2,89 +2,121 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 // import { v4 as uuidv4 ,} from "uuid";
-import uuid from "uuid/v4";
+import { v4 as uuidv4 } from "uuid";
 
-import { addTask, moveTask } from "../Redux/Actions/actiontypes";
 import { TaskList } from "../Components/TaskList";
+import { ADD_TASK, MOVE_TASK } from "../Redux/types";
+import { addTask, moveTask } from "../Redux/Actions/actiontypes";
 
-const itemsFromBackend = [
-  { id: uuid(), content: "First task" },
-  { id: uuid(), content: "Second task" },
-  { id: uuid(), content: "Third task" },
-  { id: uuid(), content: "Fourth task" },
-  { id: uuid(), content: "Fifth task" },
-];
-
-const columnsFromBackend = {
-  [uuid()]: {
-    name: "Requested",
-    items: itemsFromBackend,
-  },
-  [uuid()]: {
-    name: "To do",
-    items: [],
-  },
-  [uuid()]: {
-    name: "In Progress",
-    items: [],
-  },
-  [uuid()]: {
-    name: "Done",
-    items: [],
-  },
-};
-const onDragEnd = (result, columns, setColumns) => {
-  if (!result.destination) return;
-  const { source, destination } = result;
-
-  if (source.droppableId !== destination.droppableId) {
-    const sourceColumn = columns[source.droppableId];
-    const destColumn = columns[destination.droppableId];
-    const sourceItems = [...sourceColumn.items];
-    const destItems = [...destColumn.items];
-    const [removed] = sourceItems.splice(source.index, 1);
-    destItems.splice(destination.index, 0, removed);
-    setColumns({
-      ...columns,
-      [source.droppableId]: {
-        ...sourceColumn,
-        items: sourceItems,
-      },
-      [destination.droppableId]: {
-        ...destColumn,
-        items: destItems,
-      },
-    });
-  } else {
-    const column = columns[source.droppableId];
-    const copiedItems = [...column.items];
-    const [removed] = copiedItems.splice(source.index, 1);
-    copiedItems.splice(destination.index, 0, removed);
-    setColumns({
-      ...columns,
-      [source.droppableId]: {
-        ...column,
-        items: copiedItems,
-      },
-    });
-  }
-};
 const KanbanBoard = () => {
   const dispatch = useDispatch();
   const tasks = useSelector((state) => state.tasks);
   console.log(tasks);
-  const [taskInput, setTaskInput] = useState("");
+  const [taskInput, setTaskInput] = useState(tasks);
+  // const columnsFromBackend = {
+  //   [uuidv4()]: {
+  //     name: "Requested",
+  //     items: tasks,
+  //   },
+  //   [uuidv4()]: {
+  //     name: "To do",
+  //     items: [],
+  //   },
+  //   [uuidv4()]: {
+  //     name: "In Progress",
+  //     items: [],
+  //   },
+  //   [uuidv4()]: {
+  //     name: "Done",
+  //     items: [],
+  //   },
+  // };
+  // useEffect(() => {
+  //   Object.entries(columnsFromBackend).map((key, i) => {
+  //     if (key[1].name === "Requested") {
+  //       columnsFromBackend[key[1].items] = tasks;
+  //     }
+  //   });
+  // }, [tasks]);
+  // const [allTaskInputColumn, setallTaskInputColumn] =
+  //   useState(columnsFromBackend);
+  // useEffect(() => {
+  //   setallTaskInputColumn();
+  // }, [tasks]);
+  // const itemsFromBackend = [
+  //   { id: uuidv4(), title: "First task" },
+  //   { id: uuidv4(), title: "Second task" },
+  //   { id: uuidv4(), title: "Third task" },
+  //   { id: uuidv4(), title: "Fourth task" },
+  //   { id: uuidv4(), title: "Fifth task" },
+  // ];
 
-  useEffect(() => {
-    const storedTasks = JSON.parse(localStorage.getItem("tasks"));
-    if (storedTasks) {
-      dispatch({ type: "SET_TASKS", payload: storedTasks });
+  // console.log(tasks);
+  // console.log(itemsFromBackend);
+  // console.log(columnsFromBackend);
+  const onDragEnd = (result, columns, setColumns) => {
+    if (!result.destination) return;
+    const { source, destination } = result;
+
+    if (source.droppableId !== destination.droppableId) {
+      const sourceColumn = columns[source.droppableId];
+      const destColumn = columns[destination.droppableId];
+      const sourceItems = [...sourceColumn.items];
+      const destItems = [...destColumn.items];
+      const [removed] = sourceItems.splice(source.index, 1);
+      destItems.splice(destination.index, 0, removed);
+      dispatch(
+        MOVE_TASK({
+          [source.droppableId]: {
+            ...sourceColumn,
+            items: sourceItems,
+          },
+          [destination.droppableId]: {
+            ...destColumn,
+            items: destItems,
+          },
+          // taskId: draggableId,
+          // source: source.droppableId,
+          // destination: destination.droppableId,
+          // position: destination.index,
+        })
+      );
+      setColumns({
+        ...columns,
+        [source.droppableId]: {
+          ...sourceColumn,
+          items: sourceItems,
+        },
+        [destination.droppableId]: {
+          ...destColumn,
+          items: destItems,
+        },
+      });
+    } else {
+      const column = columns[source.droppableId];
+      const copiedItems = [...column.items];
+      const [removed] = copiedItems.splice(source.index, 1);
+      copiedItems.splice(destination.index, 0, removed);
+      setColumns({
+        ...columns,
+        [source.droppableId]: {
+          ...column,
+          items: copiedItems,
+        },
+      });
     }
-  }, [dispatch]);
+  };
 
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+  // useEffect(() => {
+  //   const storedTasks = JSON.parse(localStorage.getItem("tasks"));
+  //   if (storedTasks) {
+  //     dispatch({ type: "SET_TASKS", payload: storedTasks });
+  //   }
+  // }, [dispatch]);
+
+  // useEffect(() => {
+  //   localStorage.setItem("tasks", JSON.stringify(tasks));
+  // }, [tasks]);
 
   const handleTaskInputChange = (e) => {
     console.log(e.target.value);
@@ -93,7 +125,7 @@ const KanbanBoard = () => {
 
   const handleAddTask = () => {
     if (taskInput) {
-      dispatch(addTask({ id: uuid(), title: taskInput, status: "todo" }));
+      dispatch(addTask({ id: uuidv4(), title: taskInput, status: "todo" }));
       setTaskInput("");
     }
   };
@@ -122,7 +154,7 @@ const KanbanBoard = () => {
       })
     );
   };
-  const [columns, setColumns] = useState(columnsFromBackend);
+  const [columns, setColumns] = useState(tasks);
 
   return (
     <div className="kanban-board">
@@ -136,14 +168,14 @@ const KanbanBoard = () => {
         />
         <button onClick={handleAddTask}>Add</button>
       </div>
-      {/* <DragDropContext onDropEnd={(result) => console.log(result)}>
+      {/* <DragDropContext onDropEnd={(result) => handleDragEnd(result)}>
         <div className="task-list">
           <TaskList status="todo" tasks={tasks} />
           <TaskList status="inprogress" tasks={tasks} />
           <TaskList status="done" tasks={tasks} />
         </div>
       </DragDropContext> */}
-      <DragDropContext
+      {/* <DragDropContext
         onDragEnd={(result) => onDragEnd(result, columns, setColumns)}
       >
         {Object.entries(columns).map(([columnId, column], index) => {
@@ -175,7 +207,7 @@ const KanbanBoard = () => {
                       >
                         {column.items.map((item, index) => {
                           return (
-                            <Draggable 
+                            <Draggable
                               key={item.id}
                               draggableId={item.id}
                               index={index}
@@ -198,7 +230,7 @@ const KanbanBoard = () => {
                                       ...provided.draggableProps.style,
                                     }}
                                   >
-                                    {item.content}
+                                    {item.title}
                                   </div>
                                 );
                               }}
@@ -214,7 +246,7 @@ const KanbanBoard = () => {
             </div>
           );
         })}
-      </DragDropContext>
+      </DragDropContext> */}
     </div>
   );
 };
